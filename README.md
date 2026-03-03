@@ -196,7 +196,26 @@ npx supabase link --project-ref your-production-ref
 npx supabase db push
 ```
 
-Or use GitHub Actions for automated deployments (see `.github/workflows/` for examples).
+Or use the included GitHub Actions workflow for automated migrations.
+
+### GitHub Actions: Automatic DB Migrations
+
+This repository includes:
+
+- `.github/workflows/db-migrations.yml`
+
+The workflow runs when:
+
+- You push to `main` and files under `supabase/migrations/**` changed
+- You manually trigger it from the Actions tab (`workflow_dispatch`)
+
+Add these repository secrets before using it:
+
+- `SUPABASE_ACCESS_TOKEN` - Personal access token from Supabase
+- `SUPABASE_PROJECT_REF` - Your production Supabase project reference
+- `SUPABASE_DB_PASSWORD` - Database password for the target project
+
+After adding secrets, push a migration to `main` or run the workflow manually.
 
 ## Environment Variables
 
