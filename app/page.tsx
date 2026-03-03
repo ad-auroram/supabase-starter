@@ -1,7 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const ctaHref = user ? "/dashboard" : "/signin";
+  const ctaLabel = user ? "Go to Dashboard" : "Sign In";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 font-sans">
       <main className="flex min-h-screen w-full max-w-4xl flex-col items-center justify-center py-16 px-8">
@@ -26,18 +35,15 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex gap-4 mt-6">
+            <div className="mt-6 text-center">
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+                {user ? "You're signed in, let's go!" : "Sign in here!"}
+              </p>
               <Link
-                href="/signup"
+                href={ctaHref}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition shadow-md hover:shadow-lg"
               >
-                Get Started
-              </Link>
-              <Link
-                href="/signin"
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition"
-              >
-                Sign In
+                {ctaLabel}
               </Link>
             </div>
 
