@@ -24,7 +24,7 @@ jobs:
           node-version: '20'
 
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        run: npx supabase --help
 
       - name: Link Supabase project
         env:

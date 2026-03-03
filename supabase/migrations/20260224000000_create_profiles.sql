@@ -18,19 +18,19 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own profile" 
   ON public.profiles 
   FOR SELECT 
-  USING (auth.uid() = id);
+  USING ((select auth.uid()) = id);
 
 -- RLS Policy: Allow users to update their own profile
 CREATE POLICY "Users can update own profile" 
   ON public.profiles 
   FOR UPDATE 
-  USING (auth.uid() = id);
+  USING ((select auth.uid()) = id);
 
 -- RLS Policy: Allow users to insert their own profile
 CREATE POLICY "Users can insert own profile" 
   ON public.profiles 
   FOR INSERT 
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK ((select auth.uid()) = id);
 
 -- Function to handle updated_at timestamp automatically
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
@@ -39,7 +39,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Trigger to update updated_at on profile updates
 CREATE TRIGGER set_updated_at
@@ -55,7 +55,7 @@ BEGIN
   VALUES (NEW.id, NEW.email);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger to create profile automatically on user signup
 CREATE TRIGGER on_auth_user_created
