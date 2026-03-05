@@ -2,6 +2,10 @@
 
 A full-stack Next.js 13+ application with Supabase authentication, protected routes, and a complete development setup.
 
+## Project Purpose
+
+This project is a production-ready starter kit for building authenticated Next.js apps on Supabase. It gives you a working baseline with auth flows, protected routes, profile persistence, migrations, and CI-friendly deployment patterns so you can focus on domain features instead of initial setup.
+
 ## Features
 
 - ✅ **Authentication** - Sign up, sign in, and session management
@@ -43,7 +47,7 @@ A full-stack Next.js 13+ application with Supabase authentication, protected rou
 ├── supabase/
 │   ├── migrations/          # SQL migration files
 │   └── schemas/             # Declarative schema definitions
-├── middleware.ts            # Next.js middleware for auth
+├── proxy.ts                 # Next.js proxy/middleware auth checks
 └── scripts/
     └── setup.sh             # Setup script
 ```
@@ -52,12 +56,14 @@ A full-stack Next.js 13+ application with Supabase authentication, protected rou
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Docker (for local Supabase)
+- Node.js 18+ (Node.js 20 LTS recommended)
+- npm 9+
+- Docker (required for local Supabase)
+- Supabase CLI (optional if using `npx supabase`)
 
 ### Quick Setup
 
-1. **Clone and install dependencies**
+1. **Install dependencies**
    ```bash
    npm install
    ```
@@ -68,29 +74,15 @@ A full-stack Next.js 13+ application with Supabase authentication, protected rou
    ./scripts/setup.sh
    ```
 
-3. **Start Supabase locally**
-   ```bash
-   npx supabase start
-   ```
-
-4. **Copy credentials to `.env.local`**
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL= your_supabase_url_here
-   NEXT_PUBLIC_SUPABASE_ANON_KEY= your_supabase_anon_key_here
-   ```
-
-5. **Apply database migrations**
-   ```bash
-   npx supabase db reset
-   ```
-
-6. **Start the development server**
+3. **Start the development server**
    ```bash
    npm run dev
    ```
 
-7. **Open your browser**
+4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+The setup script installs dependencies, offers to start local Supabase, creates/updates `.env.local`, and can run migrations.
 
 ### Manual Setup
 
@@ -118,6 +110,16 @@ If you prefer manual setup or are using a remote Supabase project:
    ```bash
    npm run dev
    ```
+
+## Using This Starter For New Projects
+
+1. **Create your new repository** from this starter (GitHub template or clone/copy).
+2. **Rename the app** in `package.json` and update branding/content in `app/`.
+3. **Create a new Supabase project** (or run local Supabase for development).
+4. **Set environment variables** in `.env.local` and deployment platform settings.
+5. **Add your domain schema** as new SQL files under `supabase/migrations/`.
+6. **Keep auth and profile primitives** (`lib/supabase`, `hooks/useAuth`, protected routes) and build your feature modules on top.
+7. **Deploy app + run migrations** using the production migration workflow below.
 
 ## Available Scripts
 
@@ -154,6 +156,11 @@ CREATE TABLE profiles (
 
 Row Level Security (RLS) policies ensure users can only access their own data.
 
+Schema source files:
+
+- `supabase/migrations/20260224000000_create_profiles.sql`
+- `supabase/schemas/profiles.sql`
+
 ## Authentication Flow
 
 1. **Sign Up**: Creates user in `auth.users` and triggers profile creation
@@ -189,6 +196,10 @@ npm test
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 4. Deploy
 
+For server-side operations outside this starter's defaults, you may also configure:
+
+- `SUPABASE_SERVICE_ROLE_KEY` (never expose as `NEXT_PUBLIC_*`)
+
 ### Database Migrations in Production
 
 ```bash
@@ -217,12 +228,62 @@ Add these repository secrets before using it:
 
 After adding secrets, push a migration to `main` or run the workflow manually.
 
+Validation tips:
+
+- Ensure `.github/workflows/db-migrations.yml` exists in your default branch.
+- Verify your migration files are in `supabase/migrations/`.
+- Confirm secrets are set in repository settings before first run.
+
 ## Environment Variables
 
 Required environment variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+
+Local example:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+```
+
+
+## Troubleshooting
+
+### `NetworkError when attempting to fetch resource` during sign-in
+
+- Verify `.env.local` uses the correct project URL:
+   `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`
+- Restart the dev server after changing `.env.local`.
+- Confirm Supabase is running: `npx supabase status`.
+
+### `napi-postinstall: Permission denied` during `npm install`
+
+- Clean and reinstall dependencies:
+   ```bash
+   npm cache clean --force
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+### Setup script cannot extract credentials automatically
+
+- Run `npx supabase status` and copy values manually into `.env.local`:
+   - `NEXT_PUBLIC_SUPABASE_URL` from **Project URL**
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` from **Publishable**
+
+### Local Supabase already running
+
+- This is usually safe. Check status with:
+   ```bash
+   npx supabase status
+   ```
+- Restart if needed:
+   ```bash
+   npx supabase stop
+   npx supabase start
+   ```
 
 
 ## Resources

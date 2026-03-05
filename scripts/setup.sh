@@ -72,19 +72,29 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     echo "✅ Supabase is running!"
     echo ""
-    echo "� Extracting credentials..."
+    echo "🔑 Extracting credentials..."
     
     # Extract API URL and anon key from supabase status
-    STATUS_OUTPUT=$($SUPABASE_CMD status)
+    STATUS_OUTPUT=$($SUPABASE_CMD status 2>&1)
     
-    API_URL=$(echo "$STATUS_OUTPUT" | grep "API URL:" | sed 's/.*API URL: //' | tr -d ' ')
-    ANON_KEY=$(echo "$STATUS_OUTPUT" | grep "anon key:" | sed 's/.*anon key: //' | tr -d ' ')
+    # Extract Project URL specifically (avoid grabbing Studio/Mailpit URLs)
+    API_URL=$(echo "$STATUS_OUTPUT" | grep "Project URL" | grep -o "http://[^[:space:]│]*" | head -1)
+    if [ -z "$API_URL" ]; then
+        API_URL=$(echo "$STATUS_OUTPUT" | grep -o "http://127\.0\.0\.1:[0-9]*" | head -1)
+    fi
+    
+    # Extract Publishable key (look for sb_publishable_ pattern)
+    ANON_KEY=$(echo "$STATUS_OUTPUT" | grep -o "sb_publishable_[-A-Za-z0-9_]*" | head -1)
     
     if [ -z "$API_URL" ] || [ -z "$ANON_KEY" ]; then
         echo "⚠️  Could not automatically extract credentials"
-        echo "📋 Please manually copy from above and update .env.local:"
+        echo "📋 Please manually copy and update .env.local:"
         echo ""
-        $SUPABASE_CMD status | grep -E "API URL|anon key"
+        echo "Add the following to .env.local:"
+        echo "  NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321"
+        echo "  NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key from below>"
+        echo ""
+        $SUPABASE_CMD status
     else
         echo "✅ Credentials extracted successfully"
         echo ""
@@ -110,11 +120,17 @@ EOF
         echo "   Anon Key: ${ANON_KEY:0:20}..."
     fi
     
-    # Run database migrations
-    echo ""
-    echo "🗄️  Running database migrations..."
-    $SUPABASE_CMD db reset
-    echo "✅ Migrations completed!"
+    # Run database migrations if credentials were found
+    if [ -n "$API_URL" ] && [ -n "$ANON_KEY" ]; then
+        echo ""
+        echo "🗄️  Running database migrations..."
+        $SUPABASE_CMD db reset
+        echo "✅ Migrations completed!"
+    else
+        echo ""
+        echo "⚠️  Skipping migrations until credentials are set in .env.local"
+        echo "   Once you've added them, run: npx supabase db reset"
+    fi
 fi
 
 echo ""
