@@ -24,10 +24,15 @@ fi
 
 echo "✅ npm is installed: $(npm --version)"
 
-# Install dependencies
+# Check if node_modules exists and dependencies are installed
 echo ""
-echo "📦 Installing dependencies..."
-npm install
+if [ -d "node_modules" ] && npm list > /dev/null 2>&1; then
+    echo "✅ Dependencies are already installed"
+else
+    echo "📦 Installing dependencies..."
+    npm install
+    echo "✅ Dependencies installed successfully"
+fi
 
 # Check if Supabase CLI is available
 if ! command -v supabase &> /dev/null; then
@@ -43,14 +48,13 @@ fi
 # Check if .env.local exists
 if [ ! -f .env.local ]; then
     echo ""
-    echo "📝 Creating .env.local from template..."
-    cp .env.local.example .env.local
-    echo "⚠️  Please update .env.local with your Supabase credentials"
-    echo ""
-    echo "To start Supabase locally, run:"
-    echo "  npx supabase start"
-    echo ""
-    echo "Then copy the credentials to .env.local"
+    echo "📝 Creating .env.local..."
+    cat > .env.local << 'EOF'
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+EOF
+    echo "✅ .env.local created (credentials will be filled automatically)"
 else
     echo "✅ .env.local already exists"
 fi
@@ -68,25 +72,54 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     echo "✅ Supabase is running!"
     echo ""
-    echo "📋 Copy the following credentials to your .env.local file:"
+    echo "� Extracting credentials..."
+    
+    # Extract API URL and anon key from supabase status
+    STATUS_OUTPUT=$($SUPABASE_CMD status)
+    
+    API_URL=$(echo "$STATUS_OUTPUT" | grep "API URL:" | sed 's/.*API URL: //' | tr -d ' ')
+    ANON_KEY=$(echo "$STATUS_OUTPUT" | grep "anon key:" | sed 's/.*anon key: //' | tr -d ' ')
+    
+    if [ -z "$API_URL" ] || [ -z "$ANON_KEY" ]; then
+        echo "⚠️  Could not automatically extract credentials"
+        echo "📋 Please manually copy from above and update .env.local:"
+        echo ""
+        $SUPABASE_CMD status | grep -E "API URL|anon key"
+    else
+        echo "✅ Credentials extracted successfully"
+        echo ""
+        echo "📝 Updating .env.local..."
+        
+        # Update .env.local with credentials
+        if grep -q "NEXT_PUBLIC_SUPABASE_URL=" .env.local; then
+            sed -i.bak "s|NEXT_PUBLIC_SUPABASE_URL=.*|NEXT_PUBLIC_SUPABASE_URL=$API_URL|" .env.local
+            sed -i.bak "s|NEXT_PUBLIC_SUPABASE_ANON_KEY=.*|NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY|" .env.local
+            rm -f .env.local.bak
+        else
+            cat >> .env.local << EOF
+
+NEXT_PUBLIC_SUPABASE_URL=$API_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
+EOF
+        fi
+        
+        echo "✅ .env.local updated with Supabase credentials!"
+        echo ""
+        echo "📋 Credentials:"
+        echo "   API URL: $API_URL"
+        echo "   Anon Key: ${ANON_KEY:0:20}..."
+    fi
+    
+    # Run database migrations
     echo ""
-    $SUPABASE_CMD status | grep -E "API URL|anon key"
-    echo ""
-    echo "Then update .env.local:"
-    echo "  NEXT_PUBLIC_SUPABASE_URL=<API URL>"
-    echo "  NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>"
+    echo "🗄️  Running database migrations..."
+    $SUPABASE_CMD db reset
+    echo "✅ Migrations completed!"
 fi
 
 echo ""
 echo "✨ Setup complete!"
-echo ""
-echo "Next steps:"
-echo "  1. Update .env.local with your credentials (if not done)"
-echo "  2. Run 'npm run dev' to start the development server"
-echo "  3. Visit http://localhost:3000"
-echo ""
-echo "For database migrations:"
-echo "  npx supabase db reset    # Reset and apply migrations"
-echo "  npx supabase db push     # Push new migrations"
-echo ""
-echo "Happy coding! 🎉"
+echo "📖 Next steps:"
+echo "   1. Run 'npm run dev' to start the development server"
+echo "   2. Visit http://localhost:3000"
+echo "   3. Sign up for a new account to test authentication"

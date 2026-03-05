@@ -9,7 +9,7 @@ A full-stack Next.js 13+ application with Supabase authentication, protected rou
 - ✅ **User Profiles** - Automatic profile creation with database triggers
 - ✅ **Row Level Security** - Secure database access with Supabase RLS
 - ✅ **TypeScript** - Fully typed with custom hooks and utilities
-- ✅ **TailwindCSS** - Modern styling with dark mode support
+- ✅ **TailwindCSS** - Modern styling
 - ✅ **Database Migrations** - Version-controlled database schema
 - ✅ **Testing Setup** - Ready for unit and integration tests
 
@@ -75,8 +75,8 @@ A full-stack Next.js 13+ application with Supabase authentication, protected rou
 
 4. **Copy credentials to `.env.local`**
    ```bash
-   cp .env.local.example .env.local
-   # Update with your Supabase URL and anon key
+   NEXT_PUBLIC_SUPABASE_URL= your_supabase_url_here
+   NEXT_PUBLIC_SUPABASE_ANON_KEY= your_supabase_anon_key_here
    ```
 
 5. **Apply database migrations**
@@ -224,17 +224,6 @@ Required environment variables:
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-MIT
 
 ## Resources
 
@@ -242,7 +231,3 @@ MIT
 - [Supabase Documentation](https://supabase.com/docs)
 - [TailwindCSS Documentation](https://tailwindcss.com/docs)
 - [TypeScript Documentation](https://www.typescriptlang.org/docs)
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
