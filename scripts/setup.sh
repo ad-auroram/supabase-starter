@@ -123,13 +123,13 @@ EOF
     # Run database migrations if credentials were found
     if [ -n "$API_URL" ] && [ -n "$ANON_KEY" ]; then
         echo ""
-        echo "🗄️  Running database migrations..."
-        $SUPABASE_CMD db reset
-        echo "✅ Migrations completed!"
+        echo "🗄️  Applying pending database migrations..."
+        $SUPABASE_CMD migration up
+        echo "✅ Pending migrations applied!"
     else
         echo ""
         echo "⚠️  Skipping migrations until credentials are set in .env.local"
-        echo "   Once you've added them, run: npx supabase db reset"
+        echo "   Once you've added them, run: npx supabase migration up"
     fi
 fi
 
